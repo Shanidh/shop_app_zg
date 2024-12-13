@@ -30,3 +30,17 @@ Signup and Login
 - View Order Status
 - Rate Products
 
+
+APIs:
+
+- Customer Signup API
+- Customer Login API
+- Product List API
+- User-Specific Orders API (Authentication Required)
+
+
+Installation:
+
+- Clone the repository:
+
+  git clone https://github.com/your_username/repository_name.git
