@@ -42,7 +42,9 @@ Installation:
 
 - Clone the repository:
 
-  git clone https://github.com/your_username/repository_name.git
+  git clone
+
+  https://github.com/Shanidh/shop_app_zg.git
 
 - Create a virtual environment and activate it:
 
