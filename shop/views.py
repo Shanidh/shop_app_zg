@@ -2,7 +2,9 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from .models import CustomUser, UserType, Product
+
+from customerapp.models import Product
+from .models import CustomUser, UserType
 from django.utils.text import slugify
 from django.contrib import messages
 
@@ -147,3 +149,4 @@ def delete_product(request, pk):
 def product_list(request):
     products = Product.objects.all()
     return render(request, "shop/product_list.html", {"products": products})
+    

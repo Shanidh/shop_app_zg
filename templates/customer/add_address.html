@@ -1,0 +1,23 @@
+<h1>Add New Address</h1>
+<form method="post">
+    {% csrf_token %}
+    <label for="address_line1">Address Line 1:</label>
+    <input type="text" id="address_line1" name="address_line1" required>
+    <br>
+    <label for="address_line2">Address Line 2:</label>
+    <input type="text" id="address_line2" name="address_line2">
+    <br>
+    <label for="city">City:</label>
+    <input type="text" id="city" name="city" required>
+    <br>
+    <label for="state">State:</label>
+    <input type="text" id="state" name="state" required>
+    <br>
+    <label for="postal_code">Postal Code:</label>
+    <input type="text" id="postal_code" name="postal_code" required>
+    <br>
+    <label for="country">Country:</label>
+    <input type="text" id="country" name="country" value="India">
+    <br>
+    <button type="submit">Add Address</button>
+</form>
