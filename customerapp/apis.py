@@ -4,10 +4,10 @@ from django.forms import ValidationError
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 
-from customerapp.serializer import CreateCustomerSerializer, CustomerSerializer
+from customerapp.serializer import CreateCustomerSerializer, CustomerSerializer, ProductListSerializer
 from django.contrib.auth import get_user_model, authenticate, logout, login
 
-from shop.models import UserType
+from shop.models import CustomUser, UserType
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import render, redirect
@@ -19,6 +19,8 @@ from django.utils.decorators import method_decorator
 
 from rest_framework.permissions import IsAuthenticated
 from django.utils.translation import gettext_lazy as _
+
+from customerapp.models import Order, Product
 
 
 
@@ -73,9 +75,22 @@ class CustomerRegisterAPI(APIView):
         try:
             serializer = CreateCustomerSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
+
+            # Check if the username already exists
+            username = serializer.validated_data.get('username')
+            if CustomUser.objects.filter(username=username).exists():
+                return Response(
+                    {"Success": False, "msg": "Username already exists."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             with transaction.atomic():
                 create_customer(**serializer.validated_data)
-            return Response(status=status.HTTP_201_CREATED, data=_("User created succesfully."))
+
+            return Response(
+                status=status.HTTP_201_CREATED,
+                data={"Success": True, "msg": "User created successfully."}
+            )
         except ValidationError as e:
             mes = "\n".join(e.messages)
             raise ValidationError(mes)
@@ -87,3 +102,60 @@ class CustomerRegisterAPI(APIView):
                 "msg": "User Registration Failed",
             }
             return Response(status=status.HTTP_400_BAD_REQUEST, data=data)    
+        
+
+class ProductListAPI(APIView):
+    """API for getting Product list."""
+
+    authentication_classes = [SessionAuthentication]
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        try:
+            result = Product.objects.all().values("id", "name", "description", "price").order_by("-created_at")
+            serializer = ProductListSerializer(result, many=True)
+            return Response(status=status.HTTP_200_OK, data=serializer.data)
+        except ValidationError as e:
+            mes = "\n".join(e.messages)
+            raise ValidationError(mes)
+        except Exception:
+            error_info = "\n".join(traceback.format_exception(*sys.exc_info()))
+            print(error_info)
+            data = {
+                "Success": False,
+                "msg": "List getting failed",
+            }
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=data)     
+
+
+class OrdersListAPI(APIView):
+    """API to retrieve the list of orders for the authenticated user"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            # Fetch orders for the authenticated user
+            orders = Order.objects.filter(user=request.user).order_by('-created_at')
+            
+            # Manually construct the response data without using a serializer
+            orders_list = [
+                {
+                    "id": order.id,
+                    "created_at": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                    "total_amount": str(order.total_price),
+                    "status": order.status
+                }
+                for order in orders
+            ]
+            
+            return Response(
+                {"Success": True, "orders": orders_list},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"Success": False, "msg": "Failed to retrieve orders.", "error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )           
